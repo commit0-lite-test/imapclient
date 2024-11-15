@@ -25,7 +25,7 @@ def parse_response(data: List[bytes]) -> Tuple[Any, ...]:
     Returns nested tuples of appropriately typed objects.
     """
     lexer = TokenSource(data)
-    return tuple(_parse_tokens(lexer))
+    return tuple(_parse_tokens(iter(lexer)))
 
 
 def _parse_tokens(
@@ -88,7 +88,7 @@ def parse_fetch_response(
     response = defaultdict(dict)
     lexer = TokenSource(text)
 
-    for msg_id, fetch_data in _parse_fetch_pairs(lexer):
+    for msg_id, fetch_data in _parse_fetch_pairs(iter(lexer)):
         msg_response = _ParseFetchResponseInnerDict()
         for field, value in fetch_data:
             field = field.upper()
