@@ -7,7 +7,7 @@ Initially inspired by http://effbot.org/zone/simple-iterator-parser.htm
 import datetime
 import re
 from collections import defaultdict
-from typing import Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
 from .datetime_util import parse_to_datetime
 from .exceptions import ProtocolError
 from .response_lexer import TokenSource
@@ -26,7 +26,7 @@ def parse_response(data: List[bytes]) -> Tuple[_Atom, ...]:
     return tuple(_parse_tokens(lexer))
 
 
-def _parse_tokens(lexer: TokenSource) -> Iterator[_Atom]:
+def _parse_tokens(lexer: TokenSource) -> Iterator[Union[str, int, bytes, Tuple[Any, ...]]]:
     for token in lexer:
         if token == b"(":
             yield tuple(_parse_tokens(lexer))
