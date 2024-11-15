@@ -7,7 +7,9 @@ Initially inspired by http://effbot.org/zone/simple-iterator-parser.htm
 import datetime
 import re
 from collections import defaultdict
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, TypeVar
+
+T = TypeVar('T')
 from .datetime_util import parse_to_datetime
 from .exceptions import ProtocolError
 from .response_lexer import TokenSource
@@ -17,7 +19,7 @@ from .typing_imapclient import _Atom
 __all__ = ["parse_response", "parse_message_list"]
 
 
-def parse_response(data: List[bytes]) -> Tuple[_Atom, ...]:
+def parse_response(data: List[bytes]) -> Tuple[Any, ...]:
     """Pull apart IMAP command responses.
 
     Returns nested tuples of appropriately typed objects.
@@ -27,7 +29,7 @@ def parse_response(data: List[bytes]) -> Tuple[_Atom, ...]:
 
 
 def _parse_tokens(
-    lexer: TokenSource,
+    lexer: Iterator[Union[bytes, int]],
 ) -> Iterator[Union[str, int, bytes, Tuple[Any, ...]]]:
     for token in lexer:
         if token == b"(":
@@ -70,7 +72,7 @@ def parse_message_list(data: List[Union[bytes, str]]) -> SearchIds:
     return SearchIds(ids, modseq)
 
 
-_ParseFetchResponseInnerDict = Dict[
+_ParseFetchResponseInnerDict = dict[
     bytes, Optional[Union[datetime.datetime, int, BodyData, Envelope, _Atom]]
 ]
 
@@ -102,7 +104,7 @@ def parse_fetch_response(
 
 
 def _parse_fetch_pairs(
-    lexer: TokenSource,
+    lexer: Iterator[Union[bytes, int]],
 ) -> Iterator[Tuple[int, List[Tuple[bytes, Any]]]]:
     """Parse fetch pairs from the lexer."""
     while True:
@@ -130,7 +132,7 @@ def _parse_fetch_pairs(
             fetch_data.append((field, value))
 
 
-def _parse_fetch_value(lexer: TokenSource) -> Any:
+def _parse_fetch_value(lexer: Iterator[Union[bytes, int]]) -> Any:
     token = next(lexer)
     if token == b"(":
         return tuple(
@@ -146,5 +148,5 @@ def _parse_fetch_field(field: bytes, value: Any, normalise_times: bool) -> Any:
     if field == b"INTERNALDATE":
         return parse_to_datetime(value, normalise=normalise_times)
     elif field == b"ENVELOPE":
-        return Envelope.from_response(value)
+        return Envelope.from_response(value) if hasattr(Envelope, 'from_response') else value
     return value
