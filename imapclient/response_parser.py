@@ -7,9 +7,9 @@ Initially inspired by http://effbot.org/zone/simple-iterator-parser.htm
 import datetime
 import re
 from collections import defaultdict
-from typing import Any, Dict, Iterator, List, Optional, Tuple, Union, TypeVar
+from typing import Any, Iterator, List, Optional, Tuple, Union, TypeVar
 
-T = TypeVar('T')
+T = TypeVar("T")
 from .datetime_util import parse_to_datetime
 from .exceptions import ProtocolError
 from .response_lexer import TokenSource
@@ -148,5 +148,9 @@ def _parse_fetch_field(field: bytes, value: Any, normalise_times: bool) -> Any:
     if field == b"INTERNALDATE":
         return parse_to_datetime(value, normalise=normalise_times)
     elif field == b"ENVELOPE":
-        return Envelope.from_response(value) if hasattr(Envelope, 'from_response') else value
+        return (
+            Envelope.from_response(value)
+            if hasattr(Envelope, "from_response")
+            else value
+        )
     return value
