@@ -26,7 +26,9 @@ def parse_response(data: List[bytes]) -> Tuple[_Atom, ...]:
     return tuple(_parse_tokens(lexer))
 
 
-def _parse_tokens(lexer: TokenSource) -> Iterator[Union[str, int, bytes, Tuple[Any, ...]]]:
+def _parse_tokens(
+    lexer: TokenSource,
+) -> Iterator[Union[str, int, bytes, Tuple[Any, ...]]]:
     for token in lexer:
         if token == b"(":
             yield tuple(_parse_tokens(lexer))
