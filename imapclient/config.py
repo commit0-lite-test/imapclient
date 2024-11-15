@@ -22,12 +22,8 @@ def parse_config_file(filename: str) -> argparse.Namespace:
     ns.password = config.get("DEFAULT", "password", fallback=None)
     ns.oauth2 = config.getboolean("DEFAULT", "oauth2", fallback=False)
     ns.oauth2_client_id = config.get("DEFAULT", "oauth2_client_id", fallback=None)
-    ns.oauth2_client_secret = config.get(
-        "DEFAULT", "oauth2_client_secret", fallback=None
-    )
-    ns.oauth2_refresh_token = config.get(
-        "DEFAULT", "oauth2_refresh_token", fallback=None
-    )
+    ns.oauth2_client_secret = config.get("DEFAULT", "oauth2_client_secret", fallback=None)
+    ns.oauth2_refresh_token = config.get("DEFAULT", "oauth2_refresh_token", fallback=None)
 
     return ns
 
