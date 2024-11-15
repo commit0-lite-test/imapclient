@@ -53,7 +53,7 @@ def parse_message_list(data: List[Union[bytes, str]]) -> SearchIds:
     server).
     """
     data = [item.decode("ascii") if isinstance(item, bytes) else item for item in data]
-    joined_data = " ".join(data)
+    joined_data = " ".join(str(item) for item in data)
     match = _msg_id_pattern.match(joined_data)
     if not match:
         raise ProtocolError("Invalid message list: {}".format(joined_data))
@@ -75,7 +75,7 @@ _ParseFetchResponseInnerDict = Dict[
 
 def parse_fetch_response(
     text: List[bytes], normalise_times: bool = True, uid_is_key: bool = True
-) -> "defaultdict[int, _ParseFetchResponseInnerDict]":
+) -> defaultdict[int, _ParseFetchResponseInnerDict]:
     """Pull apart IMAP FETCH responses as returned by imaplib.
 
     Returns a dictionary, keyed by message ID. Each value a dictionary
@@ -102,6 +102,7 @@ def parse_fetch_response(
 def _parse_fetch_pairs(
     lexer: TokenSource,
 ) -> Iterator[Tuple[int, List[Tuple[bytes, Any]]]]:
+    """Parse fetch pairs from the lexer."""
     while True:
         try:
             msg_id = int(next(lexer))
@@ -134,7 +135,6 @@ def _parse_fetch_value(lexer: TokenSource) -> Any:
             _parse_fetch_value(lexer) for _ in iter(lambda: next(lexer) == b")", True)
         )
     elif isinstance(token, bytes) and token.startswith(b"{"):
-        size = int(token[1:-1])
         return next(lexer)
     else:
         return token
