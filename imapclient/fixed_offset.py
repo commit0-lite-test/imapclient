@@ -17,6 +17,15 @@ class FixedOffset(datetime.tzinfo):
         hours, remaining_mins = divmod(abs(minutes), 60)
         self.__name = '%s%02d%02d' % (sign, hours, remaining_mins)
 
+    def utcoffset(self, dt: Optional[datetime.datetime]) -> datetime.timedelta:
+        return self.__offset
+
+    def tzname(self, dt: Optional[datetime.datetime]) -> str:
+        return self.__name
+
+    def dst(self, dt: Optional[datetime.datetime]) -> datetime.timedelta:
+        return ZERO
+
     @classmethod
     def for_system(cls) -> 'FixedOffset':
         """Return a FixedOffset instance for the current working timezone and
