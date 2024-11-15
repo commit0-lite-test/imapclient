@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, date
 from email.utils import parsedate_tz
 from .fixed_offset import FixedOffset
 
