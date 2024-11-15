@@ -21,7 +21,19 @@ def parse_response(data: List[bytes]) -> Tuple[_Atom, ...]:
 
     Returns nested tuples of appropriately typed objects.
     """
-    pass
+    lexer = TokenSource(data)
+    return tuple(_parse_tokens(lexer))
+
+def _parse_tokens(lexer: TokenSource) -> Iterator[_Atom]:
+    for token in lexer:
+        if token == b'(':
+            yield tuple(_parse_tokens(lexer))
+        elif token == b')':
+            return
+        elif isinstance(token, bytes):
+            yield token.decode('ascii')
+        else:
+            yield token
 _msg_id_pattern = re.compile('(\\d+(?: +\\d+)*)')
 
 def parse_message_list(data: List[Union[bytes, str]]) -> SearchIds:
@@ -35,7 +47,20 @@ def parse_message_list(data: List[Union[bytes, str]]) -> SearchIds:
     attribute which contains the MODSEQ response (if returned by the
     server).
     """
-    pass
+    data = [item.decode('ascii') if isinstance(item, bytes) else item for item in data]
+    joined_data = ' '.join(data)
+    match = _msg_id_pattern.match(joined_data)
+    if not match:
+        raise ProtocolError('Invalid message list: {}'.format(joined_data))
+    
+    ids = [int(n) for n in match.group(1).split()]
+    modseq = None
+    if 'MODSEQ' in data:
+        modseq_index = data.index('MODSEQ') + 1
+        if modseq_index < len(data):
+            modseq = int(data[modseq_index])
+    
+    return SearchIds(ids, modseq)
 _ParseFetchResponseInnerDict = Dict[bytes, Optional[Union[datetime.datetime, int, BodyData, Envelope, _Atom]]]
 
 def parse_fetch_response(text: List[bytes], normalise_times: bool=True, uid_is_key: bool=True) -> 'defaultdict[int, _ParseFetchResponseInnerDict]':
@@ -44,4 +69,61 @@ def parse_fetch_response(text: List[bytes], normalise_times: bool=True, uid_is_k
     Returns a dictionary, keyed by message ID. Each value a dictionary
     keyed by FETCH field type (eg."RFC822").
     """
-    pass
+    response = defaultdict(dict)
+    lexer = TokenSource(text)
+
+    for msg_id, fetch_data in _parse_fetch_pairs(lexer):
+        msg_response = _ParseFetchResponseInnerDict()
+        for field, value in fetch_data:
+            field = field.upper()
+            if field == b'UID' and uid_is_key:
+                msg_id = value
+            elif field in (b'INTERNALDATE', b'ENVELOPE'):
+                msg_response[field] = _parse_fetch_field(field, value, normalise_times)
+            else:
+                msg_response[field] = value
+        response[msg_id] = msg_response
+
+    return response
+
+def _parse_fetch_pairs(lexer: TokenSource) -> Iterator[Tuple[int, List[Tuple[bytes, Any]]]]:
+    while True:
+        try:
+            msg_id = int(next(lexer))
+        except StopIteration:
+            return
+
+        if next(lexer) != b'(':
+            raise ProtocolError('Expected "(" in FETCH response')
+
+        fetch_data = []
+        while True:
+            try:
+                token = next(lexer)
+            except StopIteration:
+                raise ProtocolError('Unexpected end of FETCH response')
+
+            if token == b')':
+                yield msg_id, fetch_data
+                break
+
+            field = token
+            value = _parse_fetch_value(lexer)
+            fetch_data.append((field, value))
+
+def _parse_fetch_value(lexer: TokenSource) -> Any:
+    token = next(lexer)
+    if token == b'(':
+        return tuple(_parse_fetch_value(lexer) for _ in iter(lambda: next(lexer) == b')', True))
+    elif isinstance(token, bytes) and token.startswith(b'{'):
+        size = int(token[1:-1])
+        return next(lexer)
+    else:
+        return token
+
+def _parse_fetch_field(field: bytes, value: Any, normalise_times: bool) -> Any:
+    if field == b'INTERNALDATE':
+        return parse_to_datetime(value, normalise=normalise_times)
+    elif field == b'ENVELOPE':
+        return Envelope.from_response(value)
+    return value
