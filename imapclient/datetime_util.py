@@ -48,7 +48,7 @@ _rfc822_dotted_time = re.compile(
 )
 
 
-def format_criteria_date(dt: datetime) -> bytes:
+def format_criteria_date(dt: datetime | date) -> bytes:
     """Format a date or datetime instance for use in IMAP search criteria."""
     if isinstance(dt, datetime):
         dt = dt.date()
