@@ -6,9 +6,7 @@ ZERO = datetime.timedelta(0)
 
 
 class FixedOffset(datetime.tzinfo):
-    """This class describes fixed timezone offsets in hours and minutes
-    east from UTC
-    """
+    """Fixed timezone offsets in hours and minutes east from UTC."""
 
     def __init__(self, minutes: float) -> None:
         self.__offset = datetime.timedelta(minutes=minutes)
@@ -19,12 +17,15 @@ class FixedOffset(datetime.tzinfo):
         self.__name = "%s%02d%02d" % (sign, hours, remaining_mins)
 
     def utcoffset(self, dt: Optional[datetime.datetime]) -> datetime.timedelta:
+        """Return the offset from UTC."""
         return self.__offset
 
     def tzname(self, dt: Optional[datetime.datetime]) -> str:
+        """Return the timezone name."""
         return self.__name
 
     def dst(self, dt: Optional[datetime.datetime]) -> datetime.timedelta:
+        """Return the daylight saving time offset."""
         return ZERO
 
     @classmethod
