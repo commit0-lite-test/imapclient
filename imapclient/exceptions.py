@@ -30,3 +30,6 @@ class InvalidCriteriaError(IMAPClientError):
 
 class ProtocolError(IMAPClientError):
     """The server replied with a response that violates the IMAP protocol."""
+
+class IMAPProtocolError(IMAPClientError):
+    """Raised when an IMAP protocol violation is detected."""
