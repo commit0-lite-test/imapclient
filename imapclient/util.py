@@ -17,3 +17,14 @@ def to_unicode(s):
     if isinstance(s, bytes):
         return s.decode('utf-8')
     return s
+
+def chunk(lst, size):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), size):
+        yield lst[i:i + size]
+
+def to_bytes(s):
+    """Convert a string to bytes."""
+    if isinstance(s, str):
+        return s.encode('utf-8')
+    return s
