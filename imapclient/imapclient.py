@@ -248,6 +248,11 @@ class IMAPClient:
         typ, data = self._imap.starttls(ssl_context)
         self._starttls_done = True
         return data[0]
+        if self._starttls_done:
+            raise self.AbortError('STARTTLS already done')
+        typ, data = self._imap.starttls(ssl_context)
+        self._starttls_done = True
+        return data[0]
 
     def login(self, username: str, password: str):
         """Login using *username* and *password*, returning the
