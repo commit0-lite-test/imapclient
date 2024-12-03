@@ -11,3 +11,9 @@ def assert_imap_protocol(condition, message):
     """Assert that the condition is true, raising an IMAPProtocolError otherwise."""
     if not condition:
         raise IMAPProtocolError(message)
+
+def to_unicode(s):
+    """Convert a bytes object to a unicode string."""
+    if isinstance(s, bytes):
+        return s.decode('utf-8')
+    return s
