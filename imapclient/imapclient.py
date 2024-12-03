@@ -243,7 +243,11 @@ class IMAPClient:
         Raises :py:exc:`AbortError` if the server does not support STARTTLS
         or an SSL connection is already established.
         """
-        pass
+        if self._starttls_done:
+            raise self.AbortError('STARTTLS already done')
+        typ, data = self._imap.starttls(ssl_context)
+        self._starttls_done = True
+        return data[0]
 
     def login(self, username: str, password: str):
         """Login using *username* and *password*, returning the
